@@ -68,15 +68,20 @@ class CalculatorButton extends StatelessWidget {
             borderRadius:
                 BorderRadius.circular(AppConstants.buttonBorderRadius),
             child: Container(
-              height: 70,
               alignment: Alignment.center,
-              child: Text(
-                label,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: _getTextColor(context),
-                      fontWeight: FontWeight.w500,
-                      fontSize: 24,
-                    ),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    label,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: _getTextColor(context),
+                          fontWeight: FontWeight.w500,
+                          fontSize: 20,
+                        ),
+                  ),
+                ),
               ),
             ),
           ),

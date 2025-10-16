@@ -111,7 +111,7 @@ class CalculatorScreen extends ConsumerWidget {
 
             // Button grid
             Expanded(
-              flex: calculatorState.isScientificMode ? 7 : 5,
+              flex: 5,
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: calculatorState.isScientificMode
