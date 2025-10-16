@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:calculator_app/providers/calculator_provider.dart';
+import 'package:calculator_app/providers/memory_provider.dart';
 import 'package:calculator_app/widgets/calculator_display.dart';
 import 'package:calculator_app/widgets/calculator_button.dart';
 import 'package:calculator_app/widgets/scientific_buttons.dart';
 import 'package:calculator_app/utils/constants.dart';
+import 'package:calculator_app/screens/history_screen.dart';
+import 'package:calculator_app/screens/settings_screen.dart';
 
 /// Main calculator screen with basic arithmetic operations
 class CalculatorScreen extends ConsumerWidget {
@@ -14,6 +18,8 @@ class CalculatorScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final calculatorState = ref.watch(calculatorProvider);
     final calculatorNotifier = ref.read(calculatorProvider.notifier);
+    final memoryState = ref.watch(memoryProvider);
+    final memoryNotifier = ref.read(memoryProvider.notifier);
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -22,7 +28,25 @@ class CalculatorScreen extends ConsumerWidget {
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.history),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const HistoryScreen()),
+          ),
+          tooltip: 'History',
+        ),
         actions: [
+          if (memoryState.hasValue)
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: Chip(
+                label: const Text('M'),
+                labelStyle: Theme.of(context).textTheme.labelSmall,
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                side: BorderSide.none,
+              ),
+            ),
           IconButton(
             icon: Icon(
               calculatorState.isScientificMode
@@ -31,6 +55,41 @@ class CalculatorScreen extends ConsumerWidget {
             ),
             onPressed: calculatorNotifier.toggleMode,
             tooltip: 'Toggle Scientific Mode',
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              if (value == 'settings') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                );
+              } else if (value == 'copy') {
+                _copyResult(context, calculatorState.result);
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'copy',
+                child: Row(
+                  children: [
+                    Icon(Icons.copy),
+                    SizedBox(width: 8),
+                    Text('Copy Result'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'settings',
+                child: Row(
+                  children: [
+                    Icon(Icons.settings),
+                    SizedBox(width: 8),
+                    Text('Settings'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -209,6 +268,83 @@ class CalculatorScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: calculatorState.isScientificMode
+          ? null
+          : _buildMemoryBar(
+              context, ref, memoryNotifier, calculatorState.result),
+    );
+  }
+
+  Widget _buildMemoryBar(
+    BuildContext context,
+    WidgetRef ref,
+    MemoryNotifier memoryNotifier,
+    String currentResult,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 4,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildMemoryButton(context, 'MC', () => memoryNotifier.clearMemory()),
+          _buildMemoryButton(context, 'MR', () {
+            final value = memoryNotifier.recallMemory();
+            ref
+                .read(calculatorProvider.notifier)
+                .appendNumber(value.toString());
+          }),
+          _buildMemoryButton(context, 'M+', () async {
+            final value = double.tryParse(currentResult) ?? 0;
+            await memoryNotifier.addToMemory(value);
+            HapticFeedback.mediumImpact();
+          }),
+          _buildMemoryButton(context, 'M-', () async {
+            final value = double.tryParse(currentResult) ?? 0;
+            await memoryNotifier.subtractFromMemory(value);
+            HapticFeedback.mediumImpact();
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMemoryButton(
+      BuildContext context, String label, VoidCallback onPressed) {
+    return TextButton(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+      ),
+    );
+  }
+
+  void _copyResult(BuildContext context, String result) {
+    if (result == '0' || result.contains('Error')) return;
+
+    Clipboard.setData(ClipboardData(text: result));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Result copied to clipboard'),
+        duration: Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }

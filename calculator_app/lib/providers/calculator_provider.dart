@@ -2,16 +2,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:calculator_app/models/calculator_state.dart';
 import 'package:calculator_app/utils/calculator_logic.dart';
 import 'package:calculator_app/utils/scientific_logic.dart';
+import 'package:calculator_app/providers/history_provider.dart';
 
 /// Provider for calculator state management
 final calculatorProvider =
     StateNotifierProvider<CalculatorNotifier, CalculatorState>((ref) {
-  return CalculatorNotifier();
+  return CalculatorNotifier(ref);
 });
 
 /// StateNotifier for managing calculator operations
 class CalculatorNotifier extends StateNotifier<CalculatorState> {
-  CalculatorNotifier() : super(const CalculatorState());
+  final Ref ref;
+
+  CalculatorNotifier(this.ref) : super(const CalculatorState());
 
   /// Appends a number to the expression
   void appendNumber(String number) {
@@ -81,7 +84,7 @@ class CalculatorNotifier extends StateNotifier<CalculatorState> {
   }
 
   /// Calculates the result of the expression
-  void calculateResult() {
+  void calculateResult() async {
     if (state.hasError) return;
 
     if (!CalculatorLogic.isValidExpression(state.expression)) {
@@ -93,7 +96,8 @@ class CalculatorNotifier extends StateNotifier<CalculatorState> {
       return;
     }
 
-    final result = CalculatorLogic.evaluateExpression(state.expression);
+    final expression = state.expression;
+    final result = CalculatorLogic.evaluateExpression(expression);
 
     if (result.startsWith('Error')) {
       state = state.copyWith(
@@ -106,6 +110,14 @@ class CalculatorNotifier extends StateNotifier<CalculatorState> {
         result: result,
         expression: result,
       );
+
+      // Add to history (import will be added)
+      try {
+        final historyNotifier = ref.read(historyProvider.notifier);
+        await historyNotifier.addCalculation(expression, result);
+      } catch (e) {
+        // Silently handle any history errors
+      }
     }
   }
 
