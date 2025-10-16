@@ -32,6 +32,34 @@ class AppConstants {
   // Basic operation buttons
   static const List<String> basicOperators = [divide, multiply, subtract, add];
 
+  // Scientific function labels
+  static const String sin = 'sin';
+  static const String cos = 'cos';
+  static const String tan = 'tan';
+  static const String asin = 'asin';
+  static const String acos = 'acos';
+  static const String atan = 'atan';
+  static const String log = 'log';
+  static const String ln = 'ln';
+  static const String exp = 'e^x';
+  static const String power10 = '10^x';
+  static const String square = 'x²';
+  static const String cube = 'x³';
+  static const String power = 'x^y';
+  static const String squareRoot = '√x';
+  static const String cubeRoot = '³√x';
+  static const String factorial = 'x!';
+  static const String pi = 'π';
+  static const String euler = 'e';
+  static const String openParen = '(';
+  static const String closeParen = ')';
+  static const String degreeMode = 'DEG';
+  static const String radianMode = 'RAD';
+
+  // Mathematical constants
+  static const double piValue = 3.141592653589793;
+  static const double eulerValue = 2.718281828459045;
+
   // Button dimensions
   static const double buttonSpacing = 8.0;
   static const double buttonBorderRadius = 20.0;

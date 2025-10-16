@@ -9,7 +9,8 @@ class CalculatorLogic {
       String processedExpression = expression
           .replaceAll('×', '*')
           .replaceAll('÷', '/')
-          .replaceAll('%', '/100');
+          .replaceAll('%', '/100')
+          .replaceAll('^', '^'); // Power operator is already supported
 
       // Parse and evaluate the expression
       Parser parser = Parser();

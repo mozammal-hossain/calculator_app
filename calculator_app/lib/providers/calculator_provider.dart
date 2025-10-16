@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:calculator_app/models/calculator_state.dart';
 import 'package:calculator_app/utils/calculator_logic.dart';
+import 'package:calculator_app/utils/scientific_logic.dart';
 
 /// Provider for calculator state management
 final calculatorProvider =
@@ -184,5 +185,122 @@ class CalculatorNotifier extends StateNotifier<CalculatorState> {
   /// Toggles between basic and scientific mode
   void toggleMode() {
     state = state.copyWith(isScientificMode: !state.isScientificMode);
+  }
+
+  /// Toggles between degrees and radians
+  void toggleAngleMode() {
+    final newMode = state.angleMode == AngleMode.degrees
+        ? AngleMode.radians
+        : AngleMode.degrees;
+    state = state.copyWith(angleMode: newMode);
+  }
+
+  /// Appends an opening parenthesis
+  void appendOpenParen() {
+    if (state.hasError) {
+      state = const CalculatorState();
+      return;
+    }
+
+    String newExpression = state.expression;
+
+    if (newExpression == '0') {
+      newExpression = '(';
+    } else {
+      // Add multiplication if needed
+      final lastChar = newExpression[newExpression.length - 1];
+      if (RegExp(r'[0-9)]').hasMatch(lastChar)) {
+        newExpression += '×(';
+      } else {
+        newExpression += '(';
+      }
+    }
+
+    state = state.copyWith(expression: newExpression);
+  }
+
+  /// Appends a closing parenthesis
+  void appendCloseParen() {
+    if (state.hasError) return;
+
+    String expression = state.expression;
+
+    // Count open and close parentheses
+    int openCount = 0;
+    int closeCount = 0;
+    for (var char in expression.split('')) {
+      if (char == '(') openCount++;
+      if (char == ')') closeCount++;
+    }
+
+    // Only add close paren if there are unclosed open parens
+    if (openCount > closeCount &&
+        !CalculatorLogic.endsWithOperator(expression)) {
+      state = state.copyWith(expression: '$expression)');
+    }
+  }
+
+  /// Inserts a scientific function
+  void insertFunction(String function) {
+    if (state.hasError) {
+      state = const CalculatorState();
+      return;
+    }
+
+    final newExpression =
+        ScientificLogic.insertFunction(state.expression, function);
+    state = state.copyWith(expression: newExpression);
+  }
+
+  /// Inserts a mathematical constant
+  void insertConstant(String constant) {
+    if (state.hasError) {
+      state = const CalculatorState();
+      return;
+    }
+
+    final newExpression =
+        ScientificLogic.insertConstant(state.expression, constant);
+    state = state.copyWith(expression: newExpression);
+  }
+
+  /// Applies a unary function to the last number
+  void applyUnaryFunction(String function) {
+    if (state.hasError) return;
+
+    final result = ScientificLogic.applyUnaryFunction(
+      state.expression,
+      function,
+      state.angleMode,
+    );
+
+    if (result.startsWith('Error')) {
+      state = state.copyWith(
+        hasError: true,
+        errorMessage: result,
+        result: result,
+      );
+    } else {
+      state = state.copyWith(expression: result);
+    }
+  }
+
+  /// Applies power function (for x^y)
+  void applyPower() {
+    if (state.hasError) return;
+
+    String newExpression = state.expression;
+
+    // Don't add operator if expression is just '0'
+    if (newExpression == '0') return;
+
+    // Replace the last operator if the expression ends with one
+    if (CalculatorLogic.endsWithOperator(newExpression)) {
+      newExpression = newExpression.substring(0, newExpression.length - 1);
+    }
+
+    newExpression += '^';
+
+    state = state.copyWith(expression: newExpression);
   }
 }
