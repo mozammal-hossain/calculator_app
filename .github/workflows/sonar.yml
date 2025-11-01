@@ -46,7 +46,6 @@ jobs:
             echo "Please add the following secrets to your GitHub repository:"
             echo "  - SONAR_HOST_URL (e.g., https://sonarcloud.io for SonarCloud)"
             echo "  - SONAR_TOKEN (your authentication token)"
-            echo "  - SONAR_ORGANIZATION (optional, your SonarCloud organization key)"
             echo ""
             echo "For SonarCloud:"
             echo "  1. Go to https://sonarcloud.io"
@@ -61,13 +60,10 @@ jobs:
         env:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
         run: |
-          SCANNER_ARGS="-Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN} -Dsonar.projectKey=calculator_app"
-          if [ -n "${SONAR_ORGANIZATION}" ]; then
-            SCANNER_ARGS="${SCANNER_ARGS} -Dsonar.organization=${SONAR_ORGANIZATION}"
-          fi
-          sonar-scanner ${SCANNER_ARGS}
+          sonar-scanner \
+            -Dsonar.host.url=${SONAR_HOST_URL} \
+            -Dsonar.login=${SONAR_TOKEN}
 
       - name: Wait for Quality Gate
         env:
