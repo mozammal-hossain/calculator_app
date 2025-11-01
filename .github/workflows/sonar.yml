@@ -1,0 +1,57 @@
+name: SonarQube
+
+on:
+  push:
+    branches: [ main, feat/** ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  sonar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: 'stable'
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Analyze (optional but recommended)
+        run: flutter analyze || true
+
+      - name: Run tests with coverage
+        run: flutter test --coverage
+
+      - name: Download SonarScanner
+        uses: warchant/setup-sonar-scanner@v7
+
+      - name: SonarQube Scan
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          sonar-scanner \
+            -Dsonar.host.url=${SONAR_HOST_URL} \
+            -Dsonar.login=${SONAR_TOKEN}
+
+      - name: Wait for Quality Gate
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          # Requires Community plugin support or alternative action; otherwise skip
+          echo "Skipping quality gate wait on Community if unsupported"
