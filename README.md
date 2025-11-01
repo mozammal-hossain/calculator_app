@@ -1,4 +1,4 @@
-# Scientific Calculator App 
+# Scientific Calculator App
 
 A modern, feature-rich scientific calculator application built with Flutter and Riverpod.
 
