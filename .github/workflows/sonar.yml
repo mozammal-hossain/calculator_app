@@ -60,10 +60,13 @@ jobs:
         env:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
         run: |
-          sonar-scanner \
-            -Dsonar.host.url=${SONAR_HOST_URL} \
-            -Dsonar.login=${SONAR_TOKEN}
+          SCANNER_ARGS="-Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN} -Dsonar.projectKey=calculator_app"
+          if [ -n "${SONAR_ORGANIZATION}" ]; then
+            SCANNER_ARGS="${SCANNER_ARGS} -Dsonar.organization=${SONAR_ORGANIZATION}"
+          fi
+          sonar-scanner ${SCANNER_ARGS}
 
       - name: Wait for Quality Gate
         env:
