@@ -63,8 +63,7 @@ jobs:
         run: |
           sonar-scanner \
             -Dsonar.host.url=${SONAR_HOST_URL} \
-            -Dsonar.login=${SONAR_TOKEN} \
-            -Dsonar.projectKey=calculator_app
+            -Dsonar.login=${SONAR_TOKEN}
 
       - name: Wait for Quality Gate
         env:
